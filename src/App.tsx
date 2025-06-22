@@ -718,7 +718,7 @@ const App: React.FC = () => {
         <>
           {/* ヘッダー */}
           <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center space-x-4">
                   <button
@@ -745,8 +745,8 @@ const App: React.FC = () => {
                   {[
                     { key: 'how-to', label: '使い方', icon: BookOpen },
                     { key: 'diary', label: '日記', icon: Plus },
-                    { key: 'search', label: '検索', icon: Search },
-                    { key: 'worthlessness-trend', label: '推移', icon: TrendingUp }
+                    { key: 'search', label: '日記検索', icon: Search },
+                    { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp }
                   ].map(({ key, label, icon: Icon }) => (
                     <button
                       key={key}
@@ -823,7 +823,7 @@ const App: React.FC = () => {
           </header>
 
           {/* メインコンテンツ */}
-          <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
             {renderContent()}
           </main>
         </>
