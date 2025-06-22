@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp -r dist/* ./public/",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:sakura": "npm run build && echo 'Build completed for Sakura Server'"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",
