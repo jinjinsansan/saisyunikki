@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Calendar, MessageCircle, TrendingUp, Search, LogOut, RefreshCw, Database, Wifi, WifiOff, AlertTriangle, Clock, Filter, Eye, UserCheck, Star, ArrowUp, ArrowDown } from 'lucide-react';
+import { Shield, Users, Calendar, MessageCircle, TrendingUp, Search, LogOut, RefreshCw, Database, Wifi, WifiOff, AlertTriangle, Clock, Filter, Eye, UserCheck, Star, ArrowUp, ArrowDown, Edit3, Save, X, StickyNote } from 'lucide-react';
 import { getAllDiaryEntries, checkSupabaseConnection, JournalEntry } from '../lib/supabase';
 
 const AdminPage: React.FC = () => {
@@ -23,6 +23,8 @@ const AdminPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [dataSource, setDataSource] = useState<'local' | 'supabase'>('local');
+  const [editingMemo, setEditingMemo] = useState<string | null>(null);
+  const [memoText, setMemoText] = useState('');
 
   const emotions = ['恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ'];
   const counselors = ['仁カウンセラー', 'AOIカウンセラー', 'あさみカウンセラー', 'SHUカウンセラー', 'ゆーちゃカウンセラー', 'sammyカウンセラー'];
@@ -82,12 +84,14 @@ const AdminPage: React.FC = () => {
       // ローカルストレージから担当者情報を取得
       const assignments = JSON.parse(localStorage.getItem('counselorAssignments') || '{}');
       const priorities = JSON.parse(localStorage.getItem('entryPriorities') || '{}');
+      const memos = JSON.parse(localStorage.getItem('counselorMemos') || '{}');
       
       const enrichedData = data.map(entry => ({
         ...entry,
         assignedCounselor: assignments[entry.id] || '',
         priority: priorities[entry.id] || 'normal',
-        isRead: JSON.parse(localStorage.getItem('readEntries') || '{}')[entry.id] || false
+        isRead: JSON.parse(localStorage.getItem('readEntries') || '{}')[entry.id] || false,
+        memo: memos[entry.id] || ''
       }));
       
       setEntries(enrichedData);
@@ -105,7 +109,8 @@ const AdminPage: React.FC = () => {
           createdAt: entry.date,
           assignedCounselor: '',
           priority: 'normal',
-          isRead: false
+          isRead: false,
+          memo: ''
         }));
         setEntries(localData);
         setFilteredEntries(localData);
@@ -147,6 +152,32 @@ const AdminPage: React.FC = () => {
     setEntries(prev => prev.map(entry => 
       entry.id === entryId ? { ...entry, isRead: true } : entry
     ));
+  };
+
+  // メモ保存
+  const saveMemo = (entryId: string, memo: string) => {
+    const memos = JSON.parse(localStorage.getItem('counselorMemos') || '{}');
+    memos[entryId] = memo;
+    localStorage.setItem('counselorMemos', JSON.stringify(memos));
+    
+    setEntries(prev => prev.map(entry => 
+      entry.id === entryId ? { ...entry, memo } : entry
+    ));
+    
+    setEditingMemo(null);
+    setMemoText('');
+  };
+
+  // メモ編集開始
+  const startEditMemo = (entryId: string, currentMemo: string) => {
+    setEditingMemo(entryId);
+    setMemoText(currentMemo);
+  };
+
+  // メモ編集キャンセル
+  const cancelEditMemo = () => {
+    setEditingMemo(null);
+    setMemoText('');
   };
 
   // フィルタリングとソート
@@ -744,6 +775,70 @@ const AdminPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* プチメモ機能 */}
+                    <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <StickyNote className="w-4 h-4 text-yellow-600" />
+                          <h4 className="font-jp-semibold text-yellow-800 text-sm">プチメモ</h4>
+                        </div>
+                        {editingMemo !== entry.id && (
+                          <button
+                            onClick={() => startEditMemo(entry.id, entry.memo || '')}
+                            className="text-yellow-600 hover:text-yellow-700 p-1"
+                            title="メモを編集"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      
+                      {editingMemo === entry.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={memoText}
+                            onChange={(e) => setMemoText(e.target.value)}
+                            placeholder="カウンセラー用のメモを入力..."
+                            className="w-full px-3 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-jp-normal text-sm resize-none"
+                            rows={2}
+                            maxLength={200}
+                          />
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-yellow-600">
+                              {memoText.length}/200文字
+                            </span>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => saveMemo(entry.id, memoText)}
+                                className="flex items-center space-x-1 px-2 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-jp-medium transition-colors"
+                              >
+                                <Save className="w-3 h-3" />
+                                <span>保存</span>
+                              </button>
+                              <button
+                                onClick={cancelEditMemo}
+                                className="flex items-center space-x-1 px-2 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded text-xs font-jp-medium transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                                <span>キャンセル</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="min-h-[2rem]">
+                          {entry.memo ? (
+                            <p className="text-yellow-800 text-sm font-jp-normal leading-relaxed">
+                              {entry.memo}
+                            </p>
+                          ) : (
+                            <p className="text-yellow-600 text-sm font-jp-normal italic">
+                              メモがありません。クリックして追加してください。
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
                     {entry.emotion === '無価値感' && (
                       <div className="flex space-x-6 text-sm bg-gray-50 rounded-lg p-3">
                         <div className="flex items-center space-x-2">
