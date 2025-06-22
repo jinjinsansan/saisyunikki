@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield, Users } from 'lucide-react';
+import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield, Users, MessageCircle } from 'lucide-react';
 import DiaryPage from './pages/DiaryPage';
 import DiarySearchPage from './pages/DiarySearchPage';
 import HowTo from './pages/HowTo';
@@ -724,9 +724,22 @@ const App: React.FC = () => {
                     { key: 'diary', label: '日記', icon: Plus },
                     { key: 'search', label: '日記検索', icon: Search },
                     { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp },
+                    { key: 'contact', label: 'お問い合わせ', icon: MessageCircle, isExternal: true, url: 'https://lin.ee/VXZVGnx' },
                     { key: 'admin', label: '管理画面', icon: Users }
-                  ].map(({ key, label, icon: Icon }) => (
-                    <button
+                  ].map(({ key, label, icon: Icon, isExternal, url }) => (
+                    isExternal ? (
+                      <a
+                        key={key}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-3 w-full px-3 py-2 rounded-md text-base font-jp-medium transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span>{label}</span>
+                      </a>
+                    ) : (
+                      <button
                       key={key}
                       onClick={() => {
                         setCurrentPage(key);
@@ -741,6 +754,7 @@ const App: React.FC = () => {
                       <Icon className="w-5 h-5" />
                       <span>{label}</span>
                     </button>
+                    )
                   ))}
                 </div>
               </div>
