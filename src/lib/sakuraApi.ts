@@ -1,5 +1,5 @@
 // さくらのサーバー用API接続
-const SAKURA_API_BASE = process.env.REACT_APP_SAKURA_API_URL || 'https://your-domain.sakura.ne.jp/api';
+const SAKURA_API_BASE = import.meta.env.VITE_SAKURA_API_URL || 'https://your-domain.sakura.ne.jp/api';
 
 interface JournalEntry {
   id: string;
