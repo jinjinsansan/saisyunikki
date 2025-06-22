@@ -16,6 +16,10 @@ const AdminPage: React.FC = () => {
   const [assignedCounselor, setAssignedCounselor] = useState('');
   const [currentCounselor, setCurrentCounselor] = useState('');
   const [viewMode, setViewMode] = useState<'all' | 'assigned' | 'unassigned'>('all');
+  const [dateRange, setDateRange] = useState({
+    start: '',
+    end: ''
+  });
   const [loading, setLoading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [dataSource, setDataSource] = useState<'local' | 'supabase'>('local');
@@ -180,6 +184,14 @@ const AdminPage: React.FC = () => {
       filtered = filtered.filter(entry => entry.assignedCounselor === assignedCounselor);
     }
 
+    // 日付範囲フィルター
+    if (dateRange.start) {
+      filtered = filtered.filter(entry => entry.date >= dateRange.start);
+    }
+    if (dateRange.end) {
+      filtered = filtered.filter(entry => entry.date <= dateRange.end);
+    }
+
     // 表示モードフィルター
     if (viewMode === 'assigned') {
       filtered = filtered.filter(entry => entry.assignedCounselor === currentCounselor);
@@ -214,7 +226,7 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     filterAndSortEntries();
-  }, [searchTerm, selectedEmotion, urgencyFilter, assignedCounselor, viewMode, sortBy, sortOrder, entries]);
+  }, [searchTerm, selectedEmotion, urgencyFilter, assignedCounselor, viewMode, sortBy, sortOrder, entries, dateRange]);
 
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
@@ -511,7 +523,7 @@ const AdminPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-jp-bold text-gray-900 mb-4">検索・フィルター</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="block text-sm font-jp-medium text-gray-700 mb-2">キーワード検索</label>
               <div className="relative">
@@ -538,6 +550,38 @@ const AdminPage: React.FC = () => {
                   <option key={emotion} value={emotion}>{emotion}</option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* 日付範囲とその他のフィルター */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-jp-medium text-gray-700 mb-2">
+                <Calendar className="w-4 h-4 inline mr-1" />
+                日付範囲
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
+                    placeholder="開始日"
+                  />
+                  <label className="text-xs text-gray-500 mt-1 block">開始日</label>
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
+                    placeholder="終了日"
+                  />
+                  <label className="text-xs text-gray-500 mt-1 block">終了日</label>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -568,6 +612,25 @@ const AdminPage: React.FC = () => {
               </select>
             </div>
           </div>
+
+          {/* フィルタークリアボタン */}
+          {(searchTerm || selectedEmotion || urgencyFilter !== 'all' || assignedCounselor || dateRange.start || dateRange.end) && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedEmotion('');
+                  setUrgencyFilter('all');
+                  setAssignedCounselor('');
+                  setDateRange({ start: '', end: '' });
+                }}
+                className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg border border-gray-300 transition-colors"
+              >
+                <Filter className="w-4 h-4" />
+                <span>フィルターをクリア</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 日記一覧 */}
