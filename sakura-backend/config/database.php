@@ -2,11 +2,11 @@
 // さくらのサーバー用データベース設定
 // ✅ 正しい接続情報で更新済み
 
-// 🔧 さくらのサーバー情報（修正版）
+// 🔧 さくらのサーバー情報（最終修正版）
 $host = 'mysql3108.db.sakura.ne.jp';
 $dbname = 'blackrabbit685_kanjou_nikki_db';
-$username = 'blackrabbit685';  // 修正
-$password = '040505Aoi';       // 修正
+$username = 'blackrabbit685';  // 修正済み
+$password = '040505Aoi';       // 修正済み
 
 // データベース接続設定
 $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4;port=3306";
