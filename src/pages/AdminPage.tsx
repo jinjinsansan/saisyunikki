@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Users, Calendar, MessageCircle, TrendingUp, Search, LogOut, RefreshCw, Database, Wifi, WifiOff } from 'lucide-react';
+import { Shield, Users, Calendar, MessageCircle, TrendingUp, Search, LogOut, RefreshCw, Database, Wifi, WifiOff, AlertTriangle, Clock, Filter, Eye, UserCheck, Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { getAllDiaryEntries, checkSupabaseConnection, JournalEntry } from '../lib/supabase';
 
 const AdminPage: React.FC = () => {
@@ -10,11 +10,18 @@ const AdminPage: React.FC = () => {
   const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState('');
+  const [urgencyFilter, setUrgencyFilter] = useState<'all' | 'urgent' | 'attention' | 'stable'>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'urgency' | 'user'>('urgency');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [assignedCounselor, setAssignedCounselor] = useState('');
+  const [currentCounselor, setCurrentCounselor] = useState('');
+  const [viewMode, setViewMode] = useState<'all' | 'assigned' | 'unassigned'>('all');
   const [loading, setLoading] = useState(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState(false);
   const [dataSource, setDataSource] = useState<'local' | 'supabase'>('local');
 
   const emotions = ['恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ'];
+  const counselors = ['田中カウンセラー', '佐藤カウンセラー', '鈴木カウンセラー', '高橋カウンセラー', '渡辺カウンセラー'];
 
   // Supabase接続状態をチェック
   useEffect(() => {
@@ -32,11 +39,24 @@ const AdminPage: React.FC = () => {
   // 認証処理
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@namisapo.com' && password === 'admin123') {
+    
+    // カウンセラー別ログイン
+    const counselorCredentials = {
+      'tanaka@namisapo.com': { password: 'counselor123', name: '田中カウンセラー' },
+      'sato@namisapo.com': { password: 'counselor123', name: '佐藤カウンセラー' },
+      'suzuki@namisapo.com': { password: 'counselor123', name: '鈴木カウンセラー' },
+      'takahashi@namisapo.com': { password: 'counselor123', name: '高橋カウンセラー' },
+      'watanabe@namisapo.com': { password: 'counselor123', name: '渡辺カウンセラー' }
+    };
+
+    const credential = counselorCredentials[email as keyof typeof counselorCredentials];
+    
+    if (credential && password === credential.password) {
       setIsAuthenticated(true);
+      setCurrentCounselor(credential.name);
       loadEntries();
     } else {
-      alert('メールアドレス: admin@namisapo.com\nパスワード: admin123\nでログインしてください');
+      alert('正しいメールアドレスとパスワードを入力してください。');
     }
   };
 
@@ -45,6 +65,7 @@ const AdminPage: React.FC = () => {
     setEntries([]);
     setEmail('');
     setPassword('');
+    setCurrentCounselor('');
   };
 
   // データ読み込み
@@ -52,9 +73,21 @@ const AdminPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await getAllDiaryEntries();
-      setEntries(data);
-      setFilteredEntries(data);
-      console.log(`✅ ${data.length}件のデータを読み込みました (${dataSource})`);
+      
+      // ローカルストレージから担当者情報を取得
+      const assignments = JSON.parse(localStorage.getItem('counselorAssignments') || '{}');
+      const priorities = JSON.parse(localStorage.getItem('entryPriorities') || '{}');
+      
+      const enrichedData = data.map(entry => ({
+        ...entry,
+        assignedCounselor: assignments[entry.id] || '',
+        priority: priorities[entry.id] || 'normal',
+        isRead: JSON.parse(localStorage.getItem('readEntries') || '{}')[entry.id] || false
+      }));
+      
+      setEntries(enrichedData);
+      setFilteredEntries(enrichedData);
+      console.log(`✅ ${enrichedData.length}件のデータを読み込みました (${dataSource})`);
     } catch (error) {
       console.error('データ読み込みエラー:', error);
       // エラーの場合はローカルデータにフォールバック
@@ -64,7 +97,10 @@ const AdminPage: React.FC = () => {
           ...entry,
           userId: 'local-user',
           userName: 'ローカルユーザー',
-          createdAt: entry.date
+          createdAt: entry.date,
+          assignedCounselor: '',
+          priority: 'normal',
+          isRead: false
         }));
         setEntries(localData);
         setFilteredEntries(localData);
@@ -75,10 +111,44 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  // フィルタリング
-  const filterEntries = () => {
+  // 担当者割り当て
+  const assignCounselor = (entryId: string, counselor: string) => {
+    const assignments = JSON.parse(localStorage.getItem('counselorAssignments') || '{}');
+    assignments[entryId] = counselor;
+    localStorage.setItem('counselorAssignments', JSON.stringify(assignments));
+    
+    setEntries(prev => prev.map(entry => 
+      entry.id === entryId ? { ...entry, assignedCounselor: counselor } : entry
+    ));
+  };
+
+  // 優先度設定
+  const setPriority = (entryId: string, priority: 'high' | 'normal' | 'low') => {
+    const priorities = JSON.parse(localStorage.getItem('entryPriorities') || '{}');
+    priorities[entryId] = priority;
+    localStorage.setItem('entryPriorities', JSON.stringify(priorities));
+    
+    setEntries(prev => prev.map(entry => 
+      entry.id === entryId ? { ...entry, priority } : entry
+    ));
+  };
+
+  // 既読マーク
+  const markAsRead = (entryId: string) => {
+    const readEntries = JSON.parse(localStorage.getItem('readEntries') || '{}');
+    readEntries[entryId] = true;
+    localStorage.setItem('readEntries', JSON.stringify(readEntries));
+    
+    setEntries(prev => prev.map(entry => 
+      entry.id === entryId ? { ...entry, isRead: true } : entry
+    ));
+  };
+
+  // フィルタリングとソート
+  const filterAndSortEntries = () => {
     let filtered = [...entries];
 
+    // 基本フィルター
     if (searchTerm) {
       filtered = filtered.filter(entry =>
         entry.event.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,12 +161,59 @@ const AdminPage: React.FC = () => {
       filtered = filtered.filter(entry => entry.emotion === selectedEmotion);
     }
 
+    // 緊急度フィルター
+    if (urgencyFilter !== 'all') {
+      filtered = filtered.filter(entry => {
+        const urgency = getUrgencyLevel(entry);
+        switch (urgencyFilter) {
+          case 'urgent': return urgency.level === 'high';
+          case 'attention': return urgency.level === 'medium';
+          case 'stable': return urgency.level === 'low';
+          default: return true;
+        }
+      });
+    }
+
+    // 担当者フィルター
+    if (assignedCounselor) {
+      filtered = filtered.filter(entry => entry.assignedCounselor === assignedCounselor);
+    }
+
+    // 表示モードフィルター
+    if (viewMode === 'assigned') {
+      filtered = filtered.filter(entry => entry.assignedCounselor === currentCounselor);
+    } else if (viewMode === 'unassigned') {
+      filtered = filtered.filter(entry => !entry.assignedCounselor);
+    }
+
+    // ソート
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'urgency':
+          const urgencyA = getUrgencyLevel(a);
+          const urgencyB = getUrgencyLevel(b);
+          const urgencyOrder = { high: 3, medium: 2, low: 1 };
+          comparison = urgencyOrder[urgencyB.level as keyof typeof urgencyOrder] - urgencyOrder[urgencyA.level as keyof typeof urgencyOrder];
+          break;
+        case 'date':
+          comparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+          break;
+        case 'user':
+          comparison = (a.userName || '').localeCompare(b.userName || '');
+          break;
+      }
+      
+      return sortOrder === 'desc' ? comparison : -comparison;
+    });
+
     setFilteredEntries(filtered);
   };
 
   useEffect(() => {
-    filterEntries();
-  }, [searchTerm, selectedEmotion, entries]);
+    filterAndSortEntries();
+  }, [searchTerm, selectedEmotion, urgencyFilter, assignedCounselor, viewMode, sortBy, sortOrder, entries]);
 
   const getEmotionColor = (emotion: string) => {
     const colorMap: { [key: string]: string } = {
@@ -129,12 +246,22 @@ const AdminPage: React.FC = () => {
     return { level: 'low', color: 'bg-green-500', text: '安定' };
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   // 統計計算
   const stats = {
     totalUsers: new Set(entries.map(e => e.userId)).size,
     totalEntries: entries.length,
     todayEntries: entries.filter(e => e.date === new Date().toISOString().split('T')[0]).length,
-    urgentCases: entries.filter(e => e.emotion === '無価値感' && e.worthlessnessScore > 80).length
+    urgentCases: entries.filter(e => e.emotion === '無価値感' && e.worthlessnessScore > 80).length,
+    myAssigned: entries.filter(e => e.assignedCounselor === currentCounselor).length,
+    unassigned: entries.filter(e => !e.assignedCounselor).length
   };
 
   // ログイン画面
@@ -150,7 +277,7 @@ const AdminPage: React.FC = () => {
               カウンセラー管理画面
             </h1>
             <p className="text-gray-600 font-jp-normal">
-              安全なSupabase統合版
+              効率的な日記管理システム
             </p>
           </div>
 
@@ -165,6 +292,7 @@ const AdminPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                placeholder="例: tanaka@namisapo.com"
                 required
               />
             </div>
@@ -179,6 +307,7 @@ const AdminPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                placeholder="パスワードを入力"
                 required
               />
             </div>
@@ -188,11 +317,25 @@ const AdminPage: React.FC = () => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-jp-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
             >
               <Shield className="w-5 h-5" />
-              <span>管理画面にログイン</span>
+              <span>ログイン</span>
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t text-center">
+          <div className="mt-6 pt-6 border-t">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="font-jp-bold text-blue-900 mb-2 text-sm">カウンセラー専用アカウント</h3>
+              <div className="text-xs text-blue-800 space-y-1">
+                <p>• 田中カウンセラー: tanaka@namisapo.com</p>
+                <p>• 佐藤カウンセラー: sato@namisapo.com</p>
+                <p>• 鈴木カウンセラー: suzuki@namisapo.com</p>
+                <p>• 高橋カウンセラー: takahashi@namisapo.com</p>
+                <p>• 渡辺カウンセラー: watanabe@namisapo.com</p>
+                <p className="mt-2 font-jp-medium">パスワード: counselor123</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
               一般社団法人NAMIDAサポート協会<br />
               カウンセラー管理システム
@@ -214,7 +357,8 @@ const AdminPage: React.FC = () => {
               <Shield className="w-8 h-8 text-blue-600" />
               <div>
                 <h1 className="text-xl font-jp-bold text-gray-900">カウンセラー管理画面</h1>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-blue-600 font-jp-medium">{currentCounselor}</span>
                   {isSupabaseConnected ? (
                     <div className="flex items-center space-x-1">
                       <Wifi className="w-4 h-4 text-green-600" />
@@ -252,76 +396,112 @@ const AdminPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* 統計カード */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+          <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-jp-medium text-gray-500">総ユーザー数</p>
-                <p className="text-2xl font-jp-bold text-gray-900">{stats.totalUsers}</p>
+              <Users className="h-6 w-6 text-blue-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">総ユーザー</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.totalUsers}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <MessageCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-jp-medium text-gray-500">総日記数</p>
-                <p className="text-2xl font-jp-bold text-gray-900">{stats.totalEntries}</p>
+              <MessageCircle className="h-6 w-6 text-green-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">総日記数</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.totalEntries}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Calendar className="h-8 w-8 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-jp-medium text-gray-500">今日の日記</p>
-                <p className="text-2xl font-jp-bold text-gray-900">{stats.todayEntries}</p>
+              <Calendar className="h-6 w-6 text-yellow-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">今日の日記</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.todayEntries}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <TrendingUp className="h-8 w-8 text-red-600" />
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">緊急ケース</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.urgentCases}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-jp-medium text-gray-500">緊急ケース</p>
-                <p className="text-2xl font-jp-bold text-gray-900">{stats.urgentCases}</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center">
+              <UserCheck className="h-6 w-6 text-purple-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">私の担当</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.myAssigned}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-4">
+            <div className="flex items-center">
+              <Clock className="h-6 w-6 text-orange-600" />
+              <div className="ml-3">
+                <p className="text-xs font-jp-medium text-gray-500">未割当</p>
+                <p className="text-lg font-jp-bold text-gray-900">{stats.unassigned}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* データソース表示 */}
+        {/* 表示モード切り替え */}
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Database className="w-5 h-5 text-gray-600" />
-              <span className="font-jp-medium text-gray-900">データソース:</span>
-              <span className={`px-2 py-1 rounded-full text-sm font-jp-medium ${
-                dataSource === 'supabase' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-orange-100 text-orange-800'
-              }`}>
-                {dataSource === 'supabase' ? 'Supabase Database' : 'ローカルストレージ'}
-              </span>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex space-x-2">
+              {[
+                { key: 'all', label: 'すべて', icon: MessageCircle },
+                { key: 'assigned', label: '私の担当', icon: UserCheck },
+                { key: 'unassigned', label: '未割当', icon: Clock }
+              ].map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setViewMode(key as any)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-jp-medium transition-colors ${
+                    viewMode === key
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </button>
+              ))}
             </div>
-            {loading && (
+
+            <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm text-gray-600">読み込み中...</span>
+                <span className="text-sm font-jp-medium text-gray-700">ソート:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                >
+                  <option value="urgency">緊急度</option>
+                  <option value="date">日付</option>
+                  <option value="user">ユーザー</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="p-1 text-gray-600 hover:text-gray-900"
+                >
+                  {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                </button>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -329,7 +509,7 @@ const AdminPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-jp-bold text-gray-900 mb-4">検索・フィルター</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-jp-medium text-gray-700 mb-2">キーワード検索</label>
               <div className="relative">
@@ -357,6 +537,34 @@ const AdminPage: React.FC = () => {
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-jp-medium text-gray-700 mb-2">緊急度</label>
+              <select
+                value={urgencyFilter}
+                onChange={(e) => setUrgencyFilter(e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
+              >
+                <option value="all">すべて</option>
+                <option value="urgent">緊急</option>
+                <option value="attention">注意</option>
+                <option value="stable">安定</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-jp-medium text-gray-700 mb-2">担当者</label>
+              <select
+                value={assignedCounselor}
+                onChange={(e) => setAssignedCounselor(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal text-sm"
+              >
+                <option value="">すべての担当者</option>
+                {counselors.map(counselor => (
+                  <option key={counselor} value={counselor}>{counselor}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -376,16 +584,16 @@ const AdminPage: React.FC = () => {
                   {loading ? 'データを読み込み中...' : '該当する日記がありません'}
                 </h3>
                 <p className="text-gray-400 font-jp-normal">
-                  {loading ? 'しばらくお待ちください' : 'まず日記を作成してからこの画面をご確認ください'}
+                  {loading ? 'しばらくお待ちください' : 'フィルター条件を変更してお試しください'}
                 </p>
               </div>
             ) : (
               filteredEntries.map((entry) => {
                 const urgency = getUrgencyLevel(entry);
                 return (
-                  <div key={entry.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div key={entry.id} className={`p-6 transition-colors ${entry.isRead ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'}`}>
                     <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 flex-wrap">
                         <div className={`w-3 h-3 rounded-full ${urgency.color}`}></div>
                         <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${getEmotionColor(entry.emotion)}`}>
                           {entry.emotion}
@@ -397,8 +605,64 @@ const AdminPage: React.FC = () => {
                         <span className={`px-2 py-1 rounded text-xs font-jp-medium text-white ${urgency.color}`}>
                           {urgency.text}
                         </span>
+                        {entry.priority !== 'normal' && (
+                          <span className={`px-2 py-1 rounded-full text-xs font-jp-medium border ${getPriorityColor(entry.priority)}`}>
+                            {entry.priority === 'high' ? '高優先度' : '低優先度'}
+                          </span>
+                        )}
+                        {!entry.isRead && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-jp-medium">
+                            未読
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        {!entry.isRead && (
+                          <button
+                            onClick={() => markAsRead(entry.id)}
+                            className="text-blue-600 hover:text-blue-700 p-1"
+                            title="既読にする"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        <select
+                          value={entry.priority || 'normal'}
+                          onChange={(e) => setPriority(entry.id, e.target.value as any)}
+                          className="text-xs border border-gray-300 rounded px-2 py-1"
+                          title="優先度設定"
+                        >
+                          <option value="high">高</option>
+                          <option value="normal">普通</option>
+                          <option value="low">低</option>
+                        </select>
+                        
+                        <select
+                          value={entry.assignedCounselor || ''}
+                          onChange={(e) => assignCounselor(entry.id, e.target.value)}
+                          className="text-xs border border-gray-300 rounded px-2 py-1"
+                          title="担当者割り当て"
+                        >
+                          <option value="">未割当</option>
+                          {counselors.map(counselor => (
+                            <option key={counselor} value={counselor}>
+                              {counselor.replace('カウンセラー', '')}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
+
+                    {entry.assignedCounselor && (
+                      <div className="mb-3">
+                        <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-jp-medium">
+                          <UserCheck className="w-3 h-3 mr-1" />
+                          担当: {entry.assignedCounselor}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                       <div>
