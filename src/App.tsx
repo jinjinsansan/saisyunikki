@@ -721,10 +721,10 @@ const App: React.FC = () => {
                     { key: 'emotion-types', label: '感情の種類', icon: Heart },
                     { key: 'support', label: 'サポートについて', icon: Shield },
                     { key: 'privacy-policy', label: '同意文', icon: Shield },
-                    { key: 'admin', label: '管理画面', icon: Users },
                     { key: 'diary', label: '日記', icon: Plus },
                     { key: 'search', label: '日記検索', icon: Search },
-                    { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp }
+                    { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp },
+                    { key: 'admin', label: '管理画面', icon: Users }
                   ].map(({ key, label, icon: Icon }) => (
                     <button
                       key={key}
