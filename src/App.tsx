@@ -59,6 +59,8 @@ const App: React.FC = () => {
       setShowPrivacyConsent(false);
       if (savedUsername) {
         setLineUsername(savedUsername);
+        // 既存ユーザーは使い方ページを表示
+        setCurrentPage('how-to');
       }
     }
   }, []);
