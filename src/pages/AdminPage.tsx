@@ -365,20 +365,6 @@ const AdminPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="font-jp-bold text-blue-900 mb-2 text-sm">カウンセラー専用アカウント</h3>
-              <div className="text-xs text-blue-800 space-y-1">
-                <p>• 仁カウンセラー: jin@namisapo.com</p>
-                <p>• AOIカウンセラー: aoi@namisapo.com</p>
-                <p>• あさみカウンセラー: asami@namisapo.com</p>
-                <p>• SHUカウンセラー: shu@namisapo.com</p>
-                <p>• ゆーちゃカウンセラー: yucha@namisapo.com</p>
-                <p>• sammyカウンセラー: sammy@namisapo.com</p>
-                <p className="mt-2 font-jp-medium">パスワード: counselor123</p>
-              </div>
-            </div>
-          </div>
 
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">
