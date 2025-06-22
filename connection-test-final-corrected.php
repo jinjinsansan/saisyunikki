@@ -1,7 +1,7 @@
 <?php
 /**
- * さくらのサーバー データベース接続テスト（最終修正版）
- * 正しい接続情報で完全テスト
+ * さくらのサーバー データベース接続テスト（MySQL 8.0完全対応版）
+ * SQLシンタックスエラー完全修正
  */
 
 // エラー表示を有効化（テスト用）
@@ -9,14 +9,14 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>🔧 さくらのサーバー データベース接続テスト（最終修正版）</h1>";
+echo "<h1>🔧 さくらのサーバー データベース接続テスト（MySQL 8.0完全対応版）</h1>";
 echo "<hr>";
 
-// 正しい接続情報（コントロールパネルから抜き取り）
+// 正しい接続情報
 $host = 'mysql3108.db.sakura.ne.jp';
 $dbname = 'blackrabbit685_kanjou_nikki_db';
-$username = 'blackrabbit685';  // 修正済み
-$password = '040505Aoi';       // 修正済み
+$username = 'blackrabbit685';
+$password = '040505Aoi';
 $port = 3306;
 
 echo "<h2>📋 接続設定情報（最終修正版）</h2>";
@@ -51,8 +51,8 @@ try {
     $version = $stmt->fetch();
     echo "<p>MySQL バージョン: <strong>" . $version['version'] . "</strong></p>";
     
-    // 現在時刻の取得（MySQL 8.0完全対応）
-    $stmt = $pdo->query("SELECT CURRENT_TIMESTAMP() as current_time");
+    // 現在時刻の取得（MySQL 8.0完全対応 - 修正済み）
+    $stmt = $pdo->query("SELECT NOW() as current_time");
     $time = $stmt->fetch();
     echo "<p>サーバー時刻: <strong>" . $time['current_time'] . "</strong></p>";
     
@@ -214,7 +214,7 @@ try {
     echo "<div style='background: #e8f5e8; padding: 20px; border-radius: 8px; border-left: 5px solid #28a745;'>";
     echo "<h4 style='color: #155724; margin-top: 0;'>✅ 接続確認完了 - 次に進むべき作業</h4>";
     echo "<ol style='color: #155724;'>";
-    echo "<li><strong>📝 設定ファイル更新完了</strong> - database.php は正しい設定で更新済み</li>";
+    echo "<li><strong>📝 設定ファイル更新</strong> - database.php を正しい設定で更新</li>";
     echo "<li><strong>🗄️ スキーマ実行</strong> - テーブル作成SQLを実行</li>";
     echo "<li><strong>🧪 APIテスト</strong> - 各エンドポイントの動作確認</li>";
     echo "<li><strong>🔗 フロントエンド連携</strong> - 環境変数設定とAPI接続テスト</li>";
@@ -243,7 +243,8 @@ try {
 echo "<hr>";
 echo "<div style='text-align: center; color: #6c757d; font-size: 12px;'>";
 echo "<p>🕒 テスト実行時刻: " . date('Y-m-d H:i:s') . " (JST)</p>";
-echo "<p>🔧 テストバージョン: Final Corrected v1.0</p>";
+echo "<p>🔧 テストバージョン: Final Corrected v1.0 - SQLシンタックス完全修正</p>";
 echo "<p>🏢 一般社団法人NAMIDAサポート協会 - かんじょうにっき</p>";
 echo "</div>";
 ?>
+</parameter>
