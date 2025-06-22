@@ -1,15 +1,15 @@
 <?php
 // さくらのサーバー用データベース設定
-// ⚠️ 以下の値を実際のさくらのサーバー情報に更新してください
+// ✅ さくらのサーバー情報で更新済み
 
-// 🔧 さくらのサーバー情報（要更新）
-$host = 'mysql**.db.sakura.ne.jp';     // ← さくらのMySQLホスト名に変更
-$dbname = 'your_database_name';         // ← 作成したデータベース名に変更
-$username = 'your_username';            // ← さくらのユーザー名に変更
-$password = 'your_password';            // ← さくらのパスワードに変更
+// 🔧 さくらのサーバー情報
+$host = 'mysql3108.db.sakura.ne.jp';
+$dbname = 'kanjou_nikki_db';
+$username = 'blackrabbit685_kanjou_nikki_db';
+$password = '[040505Aoi]';
 
 // データベース接続設定
-$dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
+$dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4;port=3306";
 
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -26,7 +26,7 @@ try {
     $pdo = new PDO($dsn, $username, $password, $options);
     
     // 接続成功時のログ（本番環境では削除推奨）
-    error_log('Database connection successful');
+    error_log('Database connection successful to: ' . $host);
     
 } catch (PDOException $e) {
     // 接続エラー時の処理
