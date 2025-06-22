@@ -4,9 +4,9 @@
 
 // 🔧 さくらのサーバー情報
 $host = 'mysql3108.db.sakura.ne.jp';
-$dbname = 'kanjou_nikki_db';
+$dbname = 'blackrabbit685_kanjou_nikki_db';
 $username = 'blackrabbit685_kanjou_nikki_db';
-$password = '[040505Aoi]';
+$password = '040505Aoi';
 
 // データベース接続設定
 $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4;port=3306";
