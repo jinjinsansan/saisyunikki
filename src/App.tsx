@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield, Users, MessageCircle } from 'lucide-react';
+import PrivacyConsent from './components/PrivacyConsent';
 import DiaryPage from './pages/DiaryPage';
 import DiarySearchPage from './pages/DiarySearchPage';
 import HowTo from './pages/HowTo';
@@ -32,6 +33,9 @@ const App: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [lineUsername, setLineUsername] = useState<string | null>(null);
   const [emotionPeriod, setEmotionPeriod] = useState<'all' | 'month' | 'week'>('all');
+  const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
+  const [showUsernameInput, setShowUsernameInput] = useState(false);
+  const [tempUsername, setTempUsername] = useState('');
 
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -53,10 +57,15 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // LINEユーザー名を取得（同意チェックは削除）
+    // 同意状況とLINEユーザー名をチェック
+    const consentGiven = localStorage.getItem('privacyConsentGiven');
     const savedUsername = localStorage.getItem('line-username');
-    if (savedUsername) {
+    
+    if (consentGiven === 'true' && savedUsername) {
       setLineUsername(savedUsername);
+    } else {
+      // 同意またはユーザー名が未設定の場合は初期化
+      setLineUsername(null);
     }
   }, []);
 
@@ -188,8 +197,66 @@ const App: React.FC = () => {
   };
 
   const handleStartApp = () => {
-    // 直接使い方ページに移動（同意チェックを削除）
-    setCurrentPage('how-to');
+    // 同意状況をチェック
+    const consentGiven = localStorage.getItem('privacyConsentGiven');
+    const savedUsername = localStorage.getItem('line-username');
+    
+    if (consentGiven !== 'true') {
+      // 同意していない場合は同意画面を表示
+      setShowPrivacyConsent(true);
+    } else if (!savedUsername) {
+      // 同意済みだがユーザー名未入力の場合はユーザー名入力画面を表示
+      setShowUsernameInput(true);
+    } else {
+      // 両方完了している場合は使い方ページへ
+      setCurrentPage('how-to');
+    }
+  };
+
+  const handlePrivacyConsent = (accepted: boolean) => {
+    if (accepted) {
+      localStorage.setItem('privacyConsentGiven', 'true');
+      localStorage.setItem('privacyConsentDate', new Date().toISOString());
+      setShowPrivacyConsent(false);
+      
+      // 同意後、ユーザー名入力画面を表示
+      const savedUsername = localStorage.getItem('line-username');
+      if (!savedUsername) {
+        setShowUsernameInput(true);
+      } else {
+        setLineUsername(savedUsername);
+        setCurrentPage('how-to');
+      }
+    } else {
+      // 同意しない場合はホーム画面に戻る
+      setShowPrivacyConsent(false);
+      alert('プライバシーポリシーに同意いただけない場合、本サービスをご利用いただけません。');
+    }
+  };
+
+  const handleUsernameSubmit = () => {
+    if (tempUsername.trim()) {
+      localStorage.setItem('line-username', tempUsername.trim());
+      setLineUsername(tempUsername.trim());
+      setShowUsernameInput(false);
+      setTempUsername('');
+      setCurrentPage('how-to');
+    } else {
+      alert('LINEユーザー名を入力してください。');
+    }
+  };
+
+  const checkAccessPermission = () => {
+    const consentGiven = localStorage.getItem('privacyConsentGiven');
+    const savedUsername = localStorage.getItem('line-username');
+    
+    if (consentGiven !== 'true' || !savedUsername) {
+      alert('日記機能をご利用いただくには、プライバシーポリシーへの同意とLINEユーザー名の入力が必要です。');
+      setCurrentPage('home');
+      return false;
+    }
+    return true;
+  };
   };
 
   const getEmotionFrequency = () => {
@@ -477,6 +544,61 @@ const App: React.FC = () => {
       );
     }
 
+    // プライバシー同意画面
+    if (showPrivacyConsent) {
+      return <PrivacyConsent onConsent={handlePrivacyConsent} />;
+    }
+
+    // ユーザー名入力画面
+    if (showUsernameInput) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <User className="w-8 h-8 text-blue-600" />
+              </div>
+              <h1 className="text-2xl font-jp-bold text-gray-900 mb-2">
+                LINEユーザー名を入力
+              </h1>
+              <p className="text-gray-600 font-jp-normal">
+                あなたのLINEユーザー名を入力してください
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="username" className="block text-sm font-jp-medium text-gray-700 mb-2">
+                  LINEユーザー名
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  value={tempUsername}
+                  onChange={(e) => setTempUsername(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
+                  placeholder="例: ユーザー名"
+                  required
+                />
+              </div>
+
+              <button
+                onClick={handleUsernameSubmit}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-jp-medium transition-colors shadow-md hover:shadow-lg"
+              >
+                保存して続ける
+              </button>
+            </div>
+
+            <div className="mt-6 pt-6 border-t text-center">
+              <p className="text-xs text-gray-500">
+                入力いただいた情報はプライバシーポリシーに基づいて管理されます
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
     // その他のページのレンダリング
     switch (currentPage) {
       case 'how-to':
@@ -494,10 +616,16 @@ const App: React.FC = () => {
       case 'admin':
         return <AdminPage />;
       case 'diary':
+        // 同意とユーザー名のチェック
+        if (!checkAccessPermission()) return null;
         return <DiaryPage />;
       case 'search':
+        // 同意とユーザー名のチェック
+        if (!checkAccessPermission()) return null;
         return <DiarySearchPage />;
       case 'worthlessness-trend':
+        // 同意とユーザー名のチェック
+        if (!checkAccessPermission()) return null;
         const worthlessnessData = getWorthlessnessData();
         const filteredData = emotionPeriod === 'week' 
           ? worthlessnessData.slice(-7)

@@ -95,6 +95,15 @@ const DiaryPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // 同意とユーザー名のチェック
+    const consentGiven = localStorage.getItem('privacyConsentGiven');
+    const lineUsername = localStorage.getItem('line-username');
+    
+    if (consentGiven !== 'true' || !lineUsername) {
+      alert('日記機能をご利用いただくには、プライバシーポリシーへの同意とLINEユーザー名の入力が必要です。');
+      return;
+    }
+    
     if (!formData.emotion || !formData.event.trim()) {
       alert('感情と出来事を入力してください。');
       return;
