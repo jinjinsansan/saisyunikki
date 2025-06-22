@@ -21,7 +21,7 @@ const AdminPage: React.FC = () => {
   const [dataSource, setDataSource] = useState<'local' | 'supabase'>('local');
 
   const emotions = ['恐怖', '悲しみ', '怒り', '悔しい', '無価値感', '罪悪感', '寂しさ', '恥ずかしさ'];
-  const counselors = ['田中カウンセラー', '佐藤カウンセラー', '鈴木カウンセラー', '高橋カウンセラー', '渡辺カウンセラー'];
+  const counselors = ['仁カウンセラー', 'AOIカウンセラー', 'あさみカウンセラー', 'SHUカウンセラー', 'ゆーちゃカウンセラー', 'sammyカウンセラー'];
 
   // Supabase接続状態をチェック
   useEffect(() => {
@@ -42,11 +42,12 @@ const AdminPage: React.FC = () => {
     
     // カウンセラー別ログイン
     const counselorCredentials = {
-      'tanaka@namisapo.com': { password: 'counselor123', name: '田中カウンセラー' },
-      'sato@namisapo.com': { password: 'counselor123', name: '佐藤カウンセラー' },
-      'suzuki@namisapo.com': { password: 'counselor123', name: '鈴木カウンセラー' },
-      'takahashi@namisapo.com': { password: 'counselor123', name: '高橋カウンセラー' },
-      'watanabe@namisapo.com': { password: 'counselor123', name: '渡辺カウンセラー' }
+      'jin@namisapo.com': { password: 'counselor123', name: '仁カウンセラー' },
+      'aoi@namisapo.com': { password: 'counselor123', name: 'AOIカウンセラー' },
+      'asami@namisapo.com': { password: 'counselor123', name: 'あさみカウンセラー' },
+      'shu@namisapo.com': { password: 'counselor123', name: 'SHUカウンセラー' },
+      'yucha@namisapo.com': { password: 'counselor123', name: 'ゆーちゃカウンセラー' },
+      'sammy@namisapo.com': { password: 'counselor123', name: 'sammyカウンセラー' }
     };
 
     const credential = counselorCredentials[email as keyof typeof counselorCredentials];
@@ -325,11 +326,12 @@ const AdminPage: React.FC = () => {
             <div className="bg-blue-50 rounded-lg p-4">
               <h3 className="font-jp-bold text-blue-900 mb-2 text-sm">カウンセラー専用アカウント</h3>
               <div className="text-xs text-blue-800 space-y-1">
-                <p>• 田中カウンセラー: tanaka@namisapo.com</p>
-                <p>• 佐藤カウンセラー: sato@namisapo.com</p>
-                <p>• 鈴木カウンセラー: suzuki@namisapo.com</p>
-                <p>• 高橋カウンセラー: takahashi@namisapo.com</p>
-                <p>• 渡辺カウンセラー: watanabe@namisapo.com</p>
+                <p>• 仁カウンセラー: jin@namisapo.com</p>
+                <p>• AOIカウンセラー: aoi@namisapo.com</p>
+                <p>• あさみカウンセラー: asami@namisapo.com</p>
+                <p>• SHUカウンセラー: shu@namisapo.com</p>
+                <p>• ゆーちゃカウンセラー: yucha@namisapo.com</p>
+                <p>• sammyカウンセラー: sammy@namisapo.com</p>
                 <p className="mt-2 font-jp-medium">パスワード: counselor123</p>
               </div>
             </div>
