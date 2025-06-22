@@ -336,7 +336,6 @@ const AdminPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
-                placeholder="例: tanaka@namisapo.com"
                 required
               />
             </div>
