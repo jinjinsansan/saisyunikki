@@ -1,4 +1,4 @@
-Here's the fixed version with the missing closing brackets. I've added the missing closing bracket for the `App` component:
+Here's the fixed version with the missing closing brackets. I\'ve added the missing closing bracket for the `App` component:
 
 ```javascript
 // ... [previous code remains the same until the checkAccessPermission function]
@@ -18,4 +18,4 @@ Here's the fixed version with the missing closing brackets. I've added the missi
 // ... [rest of the code remains the same]
 ```
 
-The issue was that there was an extra closing curly brace after the `checkAccessPermission` function. I've removed the extra one and properly closed the function. The rest of the code remains unchanged and is properly structured.
+The issue was that there was an extra closing curly brace after the \`checkAccessPermission` function. I've removed the extra one and properly closed the function. The rest of the code remains unchanged and is properly structured.
