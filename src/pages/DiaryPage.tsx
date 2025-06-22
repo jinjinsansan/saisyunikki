@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Calendar, Plus, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
-import { railwayClient } from '../lib/railway';
 
 const DiaryPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +22,6 @@ const DiaryPage: React.FC = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [saving, setSaving] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
 
   const emotions = [
     { 
@@ -102,7 +100,6 @@ const DiaryPage: React.FC = () => {
     }
 
     setSaving(true);
-    setSyncStatus('syncing');
 
     try {
       // 最初にやることページで保存されたスコアを取得
@@ -154,30 +151,7 @@ const DiaryPage: React.FC = () => {
       entries.unshift(newEntry);
       localStorage.setItem('journalEntries', JSON.stringify(entries));
       
-      // Railway への同期を試行（エラーでも継続）
-      const lineUsername = localStorage.getItem('line-username');
-      if (lineUsername) {
-        try {
-          await railwayClient.saveDiaryEntry({
-            line_username: lineUsername,
-            date: finalFormData.date,
-            emotion: finalFormData.emotion,
-            event: finalFormData.event,
-            realization: finalFormData.realization,
-            self_esteem_score: finalFormData.emotion === '無価値感' ? worthlessnessScores.todaySelfEsteem : finalFormData.selfEsteemScore,
-            worthlessness_score: finalFormData.emotion === '無価値感' ? worthlessnessScores.todayWorthlessness : finalFormData.worthlessnessScore
-          });
-          setSyncStatus('success');
-          alert('日記を保存しました！（クラウド同期完了）');
-        } catch (error) {
-          console.warn('Railway同期エラー:', error);
-          setSyncStatus('error');
-          alert('日記を保存しました！（ローカル保存のみ）');
-        }
-      } else {
-        setSyncStatus('error');
-        alert('日記を保存しました！（ローカル保存のみ）');
-      }
+      alert('日記を保存しました！');
     
       // フォームをリセット
       setFormData({
@@ -200,7 +174,6 @@ const DiaryPage: React.FC = () => {
       alert('保存に失敗しました。もう一度お試しください。');
     } finally {
       setSaving(false);
-      setTimeout(() => setSyncStatus('idle'), 3000);
     }
   };
 
@@ -630,30 +603,10 @@ const DiaryPage: React.FC = () => {
       </div>
       
       {/* ローカル保存モード表示 */}
-      <div className={`fixed bottom-4 right-4 rounded-lg p-3 shadow-lg border ${
-        syncStatus === 'success' ? 'bg-green-100 border-green-200' :
-        syncStatus === 'error' ? 'bg-yellow-100 border-yellow-200' :
-        syncStatus === 'syncing' ? 'bg-blue-100 border-blue-200' :
-        'bg-green-100 border-green-200'
-      }`}>
+      <div className="fixed bottom-4 right-4 bg-green-100 border border-green-200 rounded-lg p-3 shadow-lg">
         <div className="flex items-center space-x-2">
-          <div className={`w-2 h-2 rounded-full ${
-            syncStatus === 'success' ? 'bg-green-500' :
-            syncStatus === 'error' ? 'bg-yellow-500' :
-            syncStatus === 'syncing' ? 'bg-blue-500 animate-pulse' :
-            'bg-green-500'
-          }`}></div>
-          <span className={`font-jp-medium text-sm ${
-            syncStatus === 'success' ? 'text-green-800' :
-            syncStatus === 'error' ? 'text-yellow-800' :
-            syncStatus === 'syncing' ? 'text-blue-800' :
-            'text-green-800'
-          }`}>
-            {syncStatus === 'success' ? 'クラウド同期完了' :
-             syncStatus === 'error' ? 'ローカル保存のみ' :
-             syncStatus === 'syncing' ? '同期中...' :
-             'ローカル保存モード'}
-          </span>
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <span className="text-green-800 font-jp-medium text-sm">ローカル保存モード</span>
         </div>
       </div>
     </div>
