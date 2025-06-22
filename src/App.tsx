@@ -32,7 +32,6 @@ const App: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [lineUsername, setLineUsername] = useState<string | null>(null);
   const [emotionPeriod, setEmotionPeriod] = useState<'all' | 'month' | 'week'>('all');
-  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -58,29 +57,8 @@ const App: React.FC = () => {
     const savedUsername = localStorage.getItem('line-username');
     if (savedUsername) {
       setLineUsername(savedUsername);
-      initializeUser(savedUsername);
     }
   }, []);
-
-  const initializeUser = async (username: string) => {
-    try {
-      const user = await getOrCreateUser(username);
-      setCurrentUser(user);
-      
-      // ユーザーの日記データを取得
-      const userEntries = await getUserDiaryEntries(user.id);
-      if (userEntries.length > 0) {
-        setEntries(userEntries);
-      } else {
-        // データがない場合はテストデータを生成
-        loadEntries();
-      }
-    } catch (error) {
-      console.error('ユーザー初期化エラー:', error);
-      // エラーの場合はローカルストレージを使用
-      loadEntries();
-    }
-  };
 
   // テストデータ生成関数
   const generateTestData = () => {
