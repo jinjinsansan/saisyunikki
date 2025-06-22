@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield } from 'lucide-react';
+import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield, Users } from 'lucide-react';
 import DiaryPage from './pages/DiaryPage';
 import DiarySearchPage from './pages/DiarySearchPage';
 import HowTo from './pages/HowTo';
@@ -8,6 +8,8 @@ import NextSteps from './pages/NextSteps';
 import EmotionTypes from './pages/EmotionTypes';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import AdminPage from './pages/AdminPage';
+import { getOrCreateUser, saveDiaryEntry, getUserDiaryEntries } from './lib/supabase';
 
 interface JournalEntry {
   id: string;
@@ -30,6 +32,7 @@ const App: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [lineUsername, setLineUsername] = useState<string | null>(null);
   const [emotionPeriod, setEmotionPeriod] = useState<'all' | 'month' | 'week'>('all');
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -55,8 +58,29 @@ const App: React.FC = () => {
     const savedUsername = localStorage.getItem('line-username');
     if (savedUsername) {
       setLineUsername(savedUsername);
+      initializeUser(savedUsername);
     }
   }, []);
+
+  const initializeUser = async (username: string) => {
+    try {
+      const user = await getOrCreateUser(username);
+      setCurrentUser(user);
+      
+      // ユーザーの日記データを取得
+      const userEntries = await getUserDiaryEntries(user.id);
+      if (userEntries.length > 0) {
+        setEntries(userEntries);
+      } else {
+        // データがない場合はテストデータを生成
+        loadEntries();
+      }
+    } catch (error) {
+      console.error('ユーザー初期化エラー:', error);
+      // エラーの場合はローカルストレージを使用
+      loadEntries();
+    }
+  };
 
   // テストデータ生成関数
   const generateTestData = () => {
@@ -489,6 +513,8 @@ const App: React.FC = () => {
         return <Support />;
       case 'privacy-policy':
         return <PrivacyPolicy />;
+      case 'admin':
+        return <AdminPage />;
       case 'diary':
         return <DiaryPage />;
       case 'search':
@@ -717,6 +743,7 @@ const App: React.FC = () => {
                     { key: 'emotion-types', label: '感情の種類', icon: Heart },
                     { key: 'support', label: 'サポートについて', icon: Shield },
                     { key: 'privacy-policy', label: '同意文', icon: Shield },
+                    { key: 'admin', label: '管理画面', icon: Users },
                     { key: 'diary', label: '日記', icon: Plus },
                     { key: 'search', label: '日記検索', icon: Search },
                     { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp }
