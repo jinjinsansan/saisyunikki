@@ -9,6 +9,7 @@ import NextSteps from './pages/NextSteps';
 import EmotionTypes from './pages/EmotionTypes';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import AdminPanel from './pages/AdminPanel';
 
 interface JournalEntry {
   id: string;
@@ -569,6 +570,8 @@ const App: React.FC = () => {
         return <Support />;
       case 'privacy-policy':
         return <PrivacyPolicy />;
+      case 'admin':
+        return <AdminPanel />;
       case 'diary':
         return <DiaryPage />;
       case 'search':
@@ -799,7 +802,8 @@ const App: React.FC = () => {
                     { key: 'privacy-policy', label: '同意文', icon: Shield },
                     { key: 'diary', label: '日記', icon: Plus },
                     { key: 'search', label: '日記検索', icon: Search },
-                    { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp }
+                    { key: 'worthlessness-trend', label: '無価値感推移', icon: TrendingUp },
+                    { key: 'admin', label: '管理画面', icon: Users }
                   ].map(({ key, label, icon: Icon }) => (
                     <button
                       key={key}
