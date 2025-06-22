@@ -185,14 +185,6 @@ const AdminPage: React.FC = () => {
               />
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-blue-800 text-sm font-jp-normal">
-                <strong>管理者ログイン情報:</strong><br />
-                メール: admin@namisapo.com<br />
-                パスワード: admin123
-              </p>
-            </div>
-
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-jp-medium transition-colors shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
