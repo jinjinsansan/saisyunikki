@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Plus, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
+import { saveDiaryEntry } from '../lib/supabase';
 
 const DiaryPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -134,12 +135,8 @@ const DiaryPage: React.FC = () => {
         }
       }
       
-      // ローカルストレージに保存
-      const existingEntries = localStorage.getItem('journalEntries');
-      const entries = existingEntries ? JSON.parse(existingEntries) : [];
-      
-      const newEntry = {
-        id: Date.now().toString(),
+      // Supabaseとローカルストレージの両方に保存
+      const entryData = {
         date: finalFormData.date,
         emotion: finalFormData.emotion,
         event: finalFormData.event,
@@ -148,8 +145,16 @@ const DiaryPage: React.FC = () => {
         worthlessnessScore: finalFormData.emotion === '無価値感' ? worthlessnessScores.todayWorthlessness : finalFormData.worthlessnessScore
       };
       
-      entries.unshift(newEntry);
-      localStorage.setItem('journalEntries', JSON.stringify(entries));
+      // 安全な保存（ローカル + Supabase）
+      await saveDiaryEntry(entryData);
+        emotion: finalFormData.emotion,
+        event: finalFormData.event,
+        realization: finalFormData.realization,
+        selfEsteemScore: finalFormData.emotion === '無価値感' ? worthlessnessScores.todaySelfEsteem : finalFormData.selfEsteemScore,
+        worthlessnessScore: finalFormData.emotion === '無価値感' ? worthlessnessScores.todayWorthlessness : finalFormData.worthlessnessScore
+      };
+      
+      await saveDiaryEntry(entryData);
       
       alert('日記を保存しました！');
     
