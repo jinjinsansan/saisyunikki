@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, TrendingUp, Plus, Edit3, Trash2, ChevronLeft, ChevronRight, Menu, X, BookOpen, Play, ArrowRight, Home, Heart, Share2, Shield } from 'lucide-react';
-import PrivacyConsent from './components/PrivacyConsent';
 import DiaryPage from './pages/DiaryPage';
 import DiarySearchPage from './pages/DiarySearchPage';
 import HowTo from './pages/HowTo';
@@ -28,7 +27,6 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmotion, setSelectedEmotion] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showPrivacyConsent, setShowPrivacyConsent] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [lineUsername, setLineUsername] = useState<string | null>(null);
   const [emotionPeriod, setEmotionPeriod] = useState<'all' | 'month' | 'week'>('all');
@@ -53,13 +51,10 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const consentGiven = localStorage.getItem('privacyConsentGiven');
+    // LINEユーザー名を取得（同意チェックは削除）
     const savedUsername = localStorage.getItem('line-username');
-    if (consentGiven === 'true') {
-      setShowPrivacyConsent(false);
-      if (savedUsername) {
-        setLineUsername(savedUsername);
-      }
+    if (savedUsername) {
+      setLineUsername(savedUsername);
     }
   }, []);
 
@@ -190,34 +185,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handlePrivacyConsent = (accepted: boolean) => {
-    if (accepted) {
-      localStorage.setItem('privacyConsentGiven', 'true');
-      localStorage.setItem('privacyConsentDate', new Date().toISOString());
-      setShowPrivacyConsent(false);
-      setCurrentPage('username-input');
-    } else {
-      alert('プライバシーポリシーに同意いただけない場合、サービスをご利用いただけません。');
-    }
-  };
-
-  const handleUsernameSubmit = (username: string) => {
-    localStorage.setItem('line-username', username);
-    setLineUsername(username);
-    setCurrentPage('how-to');
-  };
-
   const handleStartApp = () => {
-    const consentGiven = localStorage.getItem('privacyConsentGiven');
-    const savedUsername = localStorage.getItem('line-username');
-    
-    if (consentGiven === 'true' && savedUsername) {
-      // 既存ユーザーは使い方ページへ
-      setCurrentPage('how-to');
-    } else {
-      // 新規ユーザーはプライバシー同意から
-      setShowPrivacyConsent(true);
-    }
+    // 直接使い方ページに移動（同意チェックを削除）
+    setCurrentPage('how-to');
   };
 
   const getEmotionFrequency = () => {
@@ -440,56 +410,6 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    if (showPrivacyConsent) {
-      return <PrivacyConsent onConsent={handlePrivacyConsent} />;
-    }
-
-    if (currentPage === 'username-input') {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <Heart className="w-8 h-8 text-blue-600" />
-              </div>
-              <h1 className="text-2xl font-jp-bold text-gray-900 mb-2">
-                ユーザー名を入力
-              </h1>
-              <p className="text-gray-600 font-jp-normal">
-                LINEのユーザー名を入力してください
-              </p>
-            </div>
-
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
-              const username = formData.get('username') as string;
-              if (username.trim()) {
-                handleUsernameSubmit(username.trim());
-              }
-            }}>
-              <div className="mb-6">
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="ユーザー名を入力"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-jp-normal"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-jp-medium transition-colors shadow-md hover:shadow-lg"
-              >
-                次へ進む
-              </button>
-            </form>
-          </div>
-        </div>
-      );
-    }
-
     if (currentPage === 'home') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-50 flex items-center justify-center p-4 relative overflow-hidden">
@@ -714,7 +634,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {!showPrivacyConsent && currentPage !== 'home' && (
+      {currentPage !== 'home' && (
         <>
           {/* ヘッダー */}
           <header className="bg-white shadow-sm border-b border-gray-200">
@@ -829,7 +749,7 @@ const App: React.FC = () => {
         </>
       )}
 
-      {(showPrivacyConsent || currentPage === 'home') && renderContent()}
+      {currentPage === 'home' && renderContent()}
     </div>
   );
 };
