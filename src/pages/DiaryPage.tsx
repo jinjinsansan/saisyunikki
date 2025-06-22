@@ -147,14 +147,6 @@ const DiaryPage: React.FC = () => {
       
       // 安全な保存（ローカル + Supabase）
       await saveDiaryEntry(entryData);
-        emotion: finalFormData.emotion,
-        event: finalFormData.event,
-        realization: finalFormData.realization,
-        selfEsteemScore: finalFormData.emotion === '無価値感' ? worthlessnessScores.todaySelfEsteem : finalFormData.selfEsteemScore,
-        worthlessnessScore: finalFormData.emotion === '無価値感' ? worthlessnessScores.todayWorthlessness : finalFormData.worthlessnessScore
-      };
-      
-      await saveDiaryEntry(entryData);
       
       alert('日記を保存しました！');
     
