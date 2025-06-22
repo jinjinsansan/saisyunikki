@@ -6,7 +6,6 @@ import {
   BookOpen, 
   Search, 
   TrendingUp, 
-  MessageCircle,
   Home,
   HelpCircle,
   Play,
@@ -42,7 +41,7 @@ interface JournalEntry {
   worthlessnessScore: number;
 }
 
-type PageType = 'home' | 'howto' | 'firststeps' | 'nextsteps' | 'emotions' | 'support' | 'privacy' | 'diary' | 'search' | 'trends' | 'chat';
+type PageType = 'home' | 'howto' | 'firststeps' | 'nextsteps' | 'emotions' | 'support' | 'privacy' | 'diary' | 'search' | 'trends';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
@@ -262,8 +261,6 @@ function App() {
         return <DiarySearchPage journalEntries={journalEntries} setJournalEntries={setJournalEntries} />;
       case 'trends':
         return <TrendsPage journalEntries={journalEntries} />;
-      case 'chat':
-        return <Chat />;
       default:
         return <HowTo />;
     }
